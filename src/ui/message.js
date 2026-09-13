@@ -1,4 +1,42 @@
 import { renderMarkdown, highlightCode } from '../utils/markdown.js';
 import { escapeHtml } from '../utils/dom.js';
 import { timeLabel } from '../utils/format.js';
-export function renderMessage(message, index, actions) { const wrapper = document.createElement('article'); wrapper.className = `message ${message.role}`; const body = message.role === 'assistant' ? renderMarkdown(message.content || '') : escapeHtml(message.content || '').replace(/\n/g, '<br>'); const avatar = message.role === 'assistant' ? `<div class="avatar assistant-avatar mood-${message.mood || 'friendly'}" aria-label="Duck AI">${message.avatar || '🦆'}</div>` : '<div class="avatar user-avatar" aria-label="Bạn">♙</div>'; const image = message.image ? `<div class="message-image-wrap"><img class="message-image" src="data:${message.image.mime};base64,${message.image.data}" alt="${escapeHtml(message.image.name || 'Ảnh đính kèm')}"><button class="copy-image" title="Copy ảnh">⧉</button></div>` : ''; wrapper.innerHTML = `${avatar}<div class="message-content"><div class="message-bubble ${message.streaming ? 'streaming' : ''}">${image}${message.content ? body : (image ? '' : '<div class="typing"><i></i><i></i><i></i>')}</div>${message.role === 'assistant' && !message.streaming ? `<div class="message-tools"><button class="icon-btn copy-msg" title="Copy">⧉</button><button class="icon-btn regen" title="Tạo lại">↻</button><button class="icon-btn like" title="Thích">♡</button><button class="icon-btn dislike" title="Không thích">♢</button><button class="icon-btn speak" title="Đọc to">◖</button><span class="time">${timeLabel(message.time)}</span></div>` : ''}</div>`; if (message.image) wrapper.querySelector('.copy-image').onclick = () => actions.copyImage(message.image); if (message.role === 'assistant' && !message.streaming) { wrapper.querySelector('.copy-msg').onclick = () => actions.copy(message.content); wrapper.querySelector('.regen').onclick = () => actions.regenerate(index); wrapper.querySelector('.like').onclick = event => { event.currentTarget.textContent = '♥'; actions.toast('Đã ghi nhận phản hồi'); }; wrapper.querySelector('.dislike').onclick = event => { event.currentTarget.textContent = '♦'; actions.toast('Đã ghi nhận phản hồi'); }; wrapper.querySelector('.speak').onclick = () => actions.speak(message.content); wrapper.querySelectorAll('pre').forEach(pre => { const code = pre.querySelector('code'); if (!code) return; highlightCode(pre); const button = document.createElement('button'); button.className = 'copy-code'; button.textContent = 'Copy'; button.onclick = () => actions.copy(code.innerText); pre.append(button); }); } return wrapper; }
+export function renderMessage(message, index, actions) {
+  const wrapper = document.createElement('article');
+  const speakerClass = message.speakerClass || (message.speaker ? `speaker-${message.speaker}` : '');
+  wrapper.className = `message ${message.role} ${speakerClass}`.trim();
+  
+  const body = message.role === 'assistant' 
+    ? renderMarkdown(message.content || '') 
+    : escapeHtml(message.content || '').replace(/\n/g, '<br>');
+    
+  const avatarChar = message.avatar || (message.role === 'user' ? '👔' : '🦆');
+  const avatar = message.role === 'assistant' 
+    ? `<div class="avatar assistant-avatar ${speakerClass} mood-${message.mood || 'friendly'}" aria-label="${escapeHtml(message.speakerName || 'Duck AI')}">${avatarChar}</div>` 
+    : `<div class="avatar user-avatar" aria-label="${escapeHtml(message.speakerName || 'Sếp')}">${avatarChar}</div>`;
+    
+  const speakerBadge = message.speakerName ? `<div class="speaker-name-badge">${escapeHtml(message.speakerName)}</div>` : '';
+  const image = message.image ? `<div class="message-image-wrap"><img class="message-image" src="data:${message.image.mime};base64,${message.image.data}" alt="${escapeHtml(message.image.name || 'Ảnh đính kèm')}"><button class="copy-image" title="Copy ảnh">⧉</button></div>` : '';
+
+  wrapper.innerHTML = `${avatar}<div class="message-content">${speakerBadge}<div class="message-bubble ${message.streaming ? 'streaming' : ''}">${image}${message.content ? body : (image ? '' : '<div class="typing"><i></i><i></i><i></i>')}</div>${message.role === 'assistant' && !message.streaming ? `<div class="message-tools"><button class="icon-btn copy-msg" title="Copy">⧉</button><button class="icon-btn regen" title="Tạo lại">↻</button><button class="icon-btn like" title="Thích">♡</button><button class="icon-btn dislike" title="Không thích">♢</button><button class="icon-btn speak" title="Đọc to">◖</button><span class="time">${timeLabel(message.time)}</span></div>` : ''}</div>`;
+  
+  if (message.image) wrapper.querySelector('.copy-image').onclick = () => actions.copyImage(message.image);
+  if (message.role === 'assistant' && !message.streaming) {
+    wrapper.querySelector('.copy-msg').onclick = () => actions.copy(message.content);
+    wrapper.querySelector('.regen').onclick = () => actions.regenerate(index);
+    wrapper.querySelector('.like').onclick = event => { event.currentTarget.textContent = '♥'; actions.toast('Đã ghi nhận phản hồi'); };
+    wrapper.querySelector('.dislike').onclick = event => { event.currentTarget.textContent = '♦'; actions.toast('Đã ghi nhận phản hồi'); };
+    wrapper.querySelector('.speak').onclick = () => actions.speak(message.content);
+    wrapper.querySelectorAll('pre').forEach(pre => {
+      const code = pre.querySelector('code');
+      if (!code) return;
+      highlightCode(pre);
+      const button = document.createElement('button');
+      button.className = 'copy-code';
+      button.textContent = 'Copy';
+      button.onclick = () => actions.copy(code.innerText);
+      pre.append(button);
+    });
+  }
+  return wrapper;
+}
