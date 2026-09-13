@@ -10,13 +10,14 @@ export async function streamGenerate({ model, temperature, system, contents, key
     try {
       const url = `${config.apiBase}/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(keyManager.current())}`;
       const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
-      if (!response.ok) { const raw = await response.text(); if (isRotatableStatus(response.status)) { keyManager.rotate(); lastError = new Error(apiError(response.status, raw)); continue; } throw new Error(apiError(response.status, raw)); }
+      if (!response.ok) { const raw = await response.text(); const error = new Error(apiError(response.status, raw)); error.status = response.status; if (isRotatableStatus(response.status)) { keyManager.rotate(); lastError = error; continue; } throw error; }
       if (!response.body) throw new Error('Trình duyệt không hỗ trợ streaming.');
       await readSse(response.body, signal, onText);
       keyManager.reset();
       return;
     } catch (error) {
       if (error.name === 'AbortError') throw error;
+      if (error.status) throw error;
       lastError = error;
       if (attempt < 1) { await new Promise(resolve => setTimeout(resolve, 700)); continue; }
     }

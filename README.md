@@ -14,7 +14,7 @@ npm run dev
 
 ```env
 VITE_GEMINI_API_KEYS=AIzaKey1,AIzaKey2,AIzaKey3
-VITE_GEMINI_DEFAULT_MODEL=gemini-2.5-flash
+VITE_GEMINI_DEFAULT_MODEL=gemini-3.6-flash
 VITE_GEMINI_TEMPERATURE=0.7
 ```
 
