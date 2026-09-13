@@ -18,7 +18,20 @@ VITE_GEMINI_DEFAULT_MODEL=gemini-3.6-flash
 VITE_GEMINI_TEMPERATURE=0.7
 ```
 
-Key sẽ được xoay khi API trả `401`, `403` hoặc `429`. Vì `VITE_*` được đưa vào bundle phía client, production an toàn nhất là chuyển `src/api/gemini.js` sang serverless proxy và giữ key ở biến môi trường server.
+Key sẽ được xoay khi API trả `401`, `403` hoặc `429`. Biến `VITE_*` được đưa vào bundle phía client, vì vậy không dùng `VITE_GEMINI_API_KEYS` cho production nếu muốn bảo mật.
+
+## Deploy bảo mật trên Vercel
+
+Project đã có function [api/chat.js](api/chat.js). Trên Vercel, khai báo:
+
+```env
+GEMINI_API_KEYS=key_server_1,key_server_2
+VITE_GEMINI_PROXY_URL=/api/chat
+```
+
+Không khai báo `VITE_GEMINI_API_KEYS` trên Vercel. Frontend sẽ gọi `/api/chat`, còn function tự xoay key ở server khi gặp `401`, `403` hoặc `429`. GitHub Pages không có server runtime để giữ secret, nên chỉ nên dùng Pages cho demo hoặc chuyển sang Vercel/Netlify Functions/Cloudflare Workers nếu cần bảo mật.
+
+Các tiện ích hiện có: nén ảnh trước khi gửi, copy ảnh, xóa toàn bộ lịch sử, cuộn cuối, retry bằng nút tạo lại và PWA Add to Home Screen.
 
 ## Deploy
 

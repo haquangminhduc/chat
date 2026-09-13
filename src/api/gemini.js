@@ -2,6 +2,7 @@ import { config } from '../config.js';
 import { apiError, isRotatableStatus } from './errors.js';
 
 export async function streamGenerate({ model, temperature, system, contents, keyManager, signal, onText }) {
+  if (import.meta.env.VITE_GEMINI_PROXY_URL) return streamThroughProxy({ model, temperature, system, contents, signal, onText });
   if (!keyManager.size) throw new Error('Chưa cấu hình VITE_GEMINI_API_KEYS trong file .env.');
   const body = { contents, generationConfig: { temperature: Number(temperature), maxOutputTokens: 8192 } };
   if (system?.trim()) body.system_instruction = { parts: [{ text: system.trim() }] };
@@ -23,6 +24,13 @@ export async function streamGenerate({ model, temperature, system, contents, key
     }
   }
   throw lastError || new Error('Không thể kết nối Gemini.');
+}
+
+async function streamThroughProxy({ model, temperature, system, contents, signal, onText }) {
+  const response = await fetch(import.meta.env.VITE_GEMINI_PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, temperature, system, contents }), signal });
+  if (!response.ok) throw new Error(apiError(response.status, await response.text()));
+  if (!response.body) throw new Error('Proxy không hỗ trợ streaming.');
+  await readSse(response.body, signal, onText);
 }
 
 async function readSse(body, signal, onText) {
