@@ -20,5 +20,5 @@
 @media(max-width:420px){.prompt-grid{grid-template-columns:1fr}.prompt-card{min-height:auto}.top-actions .help{display:none}.settings-row{width:100%;justify-content:space-between}.settings-row input[type=text]{flex:1;min-width:0}}
 
 /* Avatar cân đối và nhận diện Duck AI rõ hơn. */
-.message{align-items:flex-start}.message-content{min-width:0}.avatar{width:36px;height:36px;flex-basis:36px;border:1px solid rgba(255,255,255,.18);font-size:20px;line-height:1;place-items:center}.assistant-avatar{background:linear-gradient(135deg,#fbbf24,#f97316);filter:saturate(1.1)}.user-avatar{background:linear-gradient(135deg,var(--purple),var(--pink));font-size:19px}.message.assistant .message-content{min-width:0}
+.message{align-items:flex-start}.message-content{min-width:0}.avatar{display:grid;place-items:center;width:36px;height:36px;flex-basis:36px;border:1px solid rgba(255,255,255,.18);font-size:20px;line-height:1}.assistant-avatar{background:linear-gradient(135deg,#fbbf24,#f97316);filter:saturate(1.1)}.user-avatar{background:linear-gradient(135deg,var(--purple),var(--pink));font-size:19px}.message.assistant .message-content{min-width:0}
 @media(max-width:767px){.avatar{width:32px;height:32px;flex-basis:32px;font-size:18px}.user-avatar{font-size:17px}.message{gap:8px}}

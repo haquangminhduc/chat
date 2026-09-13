@@ -1,19 +1,20 @@
 import { renderMarkdown, highlightCode } from '../utils/markdown.js';
 import { escapeHtml } from '../utils/dom.js';
 import { timeLabel } from '../utils/format.js';
+
 export function renderMessage(message, index, actions) {
   const wrapper = document.createElement('article');
-  const speakerClass = message.speakerClass || (message.speaker ? `speaker-${message.speaker}` : '');
+  const speakerClass = message.speakerClass || (message.speakerKey ? `speaker-${message.speakerKey}` : '');
   wrapper.className = `message ${message.role} ${speakerClass}`.trim();
   
   const body = message.role === 'assistant' 
     ? renderMarkdown(message.content || '') 
     : escapeHtml(message.content || '').replace(/\n/g, '<br>');
     
-  const avatarChar = message.avatar || (message.role === 'user' ? '👔' : '🦆');
+  const avatarChar = message.avatar || (message.role === 'user' ? '♙' : '🦆');
   const avatar = message.role === 'assistant' 
     ? `<div class="avatar assistant-avatar ${speakerClass} mood-${message.mood || 'friendly'}" aria-label="${escapeHtml(message.speakerName || 'Duck AI')}">${avatarChar}</div>` 
-    : `<div class="avatar user-avatar" aria-label="${escapeHtml(message.speakerName || 'Sếp')}">${avatarChar}</div>`;
+    : `<div class="avatar user-avatar" aria-label="${escapeHtml(message.speakerName || 'Bạn')}">${avatarChar}</div>`;
     
   const speakerBadge = message.speakerName ? `<div class="speaker-name-badge">${escapeHtml(message.speakerName)}</div>` : '';
   const image = message.image ? `<div class="message-image-wrap"><img class="message-image" src="data:${message.image.mime};base64,${message.image.data}" alt="${escapeHtml(message.image.name || 'Ảnh đính kèm')}"><button class="copy-image" title="Copy ảnh">⧉</button></div>` : '';
