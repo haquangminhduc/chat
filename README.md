@@ -25,3 +25,12 @@ Key sẽ được xoay khi API trả `401`, `403` hoặc `429`. Vì `VITE_*` đ�
 - Vercel/Netlify/Cloudflare Pages: build command `npm run build`, output directory `dist`.
 - Khai báo các biến `VITE_*` trong dashboard của nền tảng trước khi build.
 - Không commit `.env`.
+
+## GitHub Pages
+
+Workflow `.github/workflows/deploy-pages.yml` sẽ tự chạy `npm run build` và deploy thư mục `dist` sau mỗi lần push lên `main` hoặc `master`.
+
+1. Vào **Settings > Pages** của repository.
+2. Chọn **Source: GitHub Actions**.
+3. Thêm secret `VITE_GEMINI_API_KEYS` trong **Settings > Secrets and variables > Actions**.
+4. Push code và mở URL Pages sau khi workflow hoàn tất.
