@@ -4,5 +4,5 @@ import { createStore } from './store.js';
 
 const saved = readStorage('settings', {});
 const model = config.defaultModel;
-export const settingsStore = createStore({ theme: saved.theme || 'dark', model, temperature: saved.temperature ?? config.defaultTemperature, system: saved.system || '' });
+export const settingsStore = createStore({ theme: saved.theme || 'dark', model, temperature: saved.temperature ?? config.defaultTemperature, system: saved.system || config.defaultSystem });
 settingsStore.subscribe(state => writeStorage('settings', state));

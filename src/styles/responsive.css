@@ -1,1 +1,24 @@
-@media(max-width:900px){.prompt-grid{grid-template-columns:repeat(2,1fr)}.sidebar{width:245px}.message-content{max-width:88%}}@media(max-width:767px){.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-105%);width:280px;box-shadow:15px 0 50px rgba(0,0,0,.35)}.sidebar.open{transform:none}.sidebar.collapsed{width:280px}.sidebar.collapsed .brand-copy,.sidebar.collapsed .new-label,.sidebar.collapsed .search-box,.sidebar.collapsed .conversation-list,.sidebar.collapsed .sidebar-footer span{display:block}.main:before{content:"";display:none;position:fixed;inset:0;z-index:4;background:rgba(0,0,0,.45)}.sidebar.open~.main:before{display:block}.topbar{padding:12px 14px}.model-select{max-width:205px}.model-select select{max-width:160px}.settings{flex-wrap:wrap}.composer-wrap{padding-left:10px;padding-right:10px}.welcome{margin-top:4vh}.hero-mark{width:62px;height:62px;font-size:30px}.prompt-grid{gap:8px}.prompt-card{min-height:110px;padding:12px}.prompt-card span{font-size:11px}#chat{padding-left:10px;padding-right:10px}.message{gap:8px}.avatar{flex-basis:30px;height:30px}.message-bubble{padding:11px 13px}}@media(max-width:420px){.prompt-grid{grid-template-columns:1fr}.prompt-card{min-height:auto}.top-actions .help{display:none}}
+@media(max-width:900px){.prompt-grid{grid-template-columns:repeat(2,1fr)}.sidebar{width:245px}.message-content{max-width:88%}}
+@media(max-width:767px){
+	html,body{height:100%;height:100dvh;overscroll-behavior:none}
+	body{overflow:hidden;-webkit-text-size-adjust:100%}
+	.app{height:100%;height:100dvh;min-height:0}
+	.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-105%);width:280px;box-shadow:15px 0 50px rgba(0,0,0,.35)}
+	.sidebar.open{transform:none}.sidebar.collapsed{width:280px}
+	.sidebar.collapsed .brand-copy,.sidebar.collapsed .new-label,.sidebar.collapsed .search-box,.sidebar.collapsed .conversation-list,.sidebar.collapsed .sidebar-footer span{display:block}
+	.main:before{content:"";display:none;position:fixed;inset:0;z-index:4;background:rgba(0,0,0,.45)}.sidebar.open~.main:before{display:block}
+	.topbar{min-height:56px;padding:10px 12px}.settings{flex-wrap:wrap}
+	.composer-wrap{padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(9,8,23,.3))}
+	.composer{gap:4px;padding:7px 8px 7px 10px;border-radius:18px}
+	#prompt{font-size:16px;line-height:1.4;min-height:30px;padding:6px 0}
+	.composer .icon-btn{width:34px;height:34px}.send-btn{width:38px;height:38px;border-radius:12px}
+	.composer-bottom{margin-top:5px;font-size:10px;padding:0 3px}.composer-bottom span:first-child{max-width:75%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+	.welcome{margin-top:4vh}.hero-mark{width:62px;height:62px;font-size:30px}.prompt-grid{gap:8px}.prompt-card{min-height:110px;padding:12px}.prompt-card span{font-size:11px}
+	#chat{padding:20px 10px 10px;overscroll-behavior:contain}.message{gap:8px}.avatar{flex-basis:30px;height:30px}.message-bubble{padding:11px 13px}
+	input,textarea,select{font-size:16px}
+}
+@media(max-width:420px){.prompt-grid{grid-template-columns:1fr}.prompt-card{min-height:auto}.top-actions .help{display:none}.settings-row{width:100%;justify-content:space-between}.settings-row input[type=text]{flex:1;min-width:0}}
+
+/* Avatar cân đối và nhận diện Duck AI rõ hơn. */
+.message{align-items:flex-start}.message-content{min-width:0}.avatar{width:36px;height:36px;flex-basis:36px;border:1px solid rgba(255,255,255,.18);font-size:20px;line-height:1;place-items:center}.assistant-avatar{background:linear-gradient(135deg,#fbbf24,#f97316);filter:saturate(1.1)}.user-avatar{background:linear-gradient(135deg,var(--purple),var(--pink));font-size:19px}.message.assistant .message-content{min-width:0}
+@media(max-width:767px){.avatar{width:32px;height:32px;flex-basis:32px;font-size:18px}.user-avatar{font-size:17px}.message{gap:8px}}
