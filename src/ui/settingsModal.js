@@ -1,0 +1,1 @@
+export function initSettingsModal({ modal, closeButton, status, keyManager }) { status.textContent = keyManager.size ? `${keyManager.size} API key đã được nạp từ .env` : 'Chưa tìm thấy API key trong .env'; closeButton.onclick = () => modal.classList.remove('open'); return () => modal.classList.add('open'); }

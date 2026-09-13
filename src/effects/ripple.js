@@ -1,0 +1,1 @@
+export function initRipple(root = document) { root.querySelectorAll('.ripple').forEach(button => { if (button.dataset.rippleReady) return; button.dataset.rippleReady = 'true'; button.addEventListener('click', () => button.animate([{ transform: 'scale(.96)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' })); }); }

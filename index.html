@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0b1d">
+  <title>Gemini Clone - AI Studio</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+</head>
+<body>
+  <div class="aurora"></div><canvas id="particles"></canvas>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">✦</div><span class="brand-copy gradient-text">Gemini Clone</span></div>
+      <button class="new-chat ripple" id="newChat"><b>＋</b><span class="new-label">New chat</span></button>
+      <label class="search-box">⌕<input id="searchConversations" placeholder="Tìm cuộc trò chuyện..." autocomplete="off"></label>
+      <div class="section-label">Gần đây</div><div class="conversation-list" id="conversationList"></div>
+      <div class="sidebar-footer"><button class="icon-btn ripple" id="toggleSidebar" title="Thu gọn sidebar">☰<span>Thu gọn</span></button><button class="icon-btn ripple" id="exportBtn" title="Xuất cuộc trò chuyện">⇩<span>Xuất</span></button><button class="icon-btn ripple" id="themeToggle" title="Đổi giao diện">☼<span>Theme</span></button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><button class="icon-btn ripple mobile-menu" id="mobileMenu" title="Mở menu">☰</button><div class="model-select">✦ <select id="modelSelect" aria-label="Chọn model"><option value="gemini-2.5-flash">Gemini 2.5 Flash</option><option value="gemini-2.5-pro">Gemini 2.5 Pro</option><option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option></select></div><div class="top-actions"><button class="icon-btn ripple" id="settingsToggle" title="Cài đặt model">⚙</button><button class="icon-btn ripple help" id="helpBtn" title="Phím tắt">?</button></div></header>
+      <section id="chat" aria-live="polite"></section>
+      <div class="composer-wrap"><div class="settings glass" id="settings"><label class="settings-row">Temperature <input type="range" id="temperature" min="0" max="2" step=".1" value=".7"><output id="tempValue">0.7</output></label><label class="settings-row">System <input type="text" id="systemInstruction" placeholder="Bạn là trợ lý hữu ích..."></label></div><div class="upload-preview glass" id="uploadPreview"><img id="previewImage"><span id="previewName"></span><button class="icon-btn" id="removeImage">×</button></div><div class="composer" id="composer"><button class="icon-btn ripple" id="uploadBtn" title="Đính kèm ảnh">⊕</button><input type="file" id="imageInput" accept="image/*" hidden><textarea id="prompt" rows="1" placeholder="Hỏi Gemini bất cứ điều gì..." aria-label="Tin nhắn"></textarea><div class="composer-actions"><button class="icon-btn ripple" id="micBtn" title="Nhập bằng giọng nói">♩</button><button class="send-btn ripple" id="sendBtn" title="Gửi">➤</button><button class="send-btn stop-btn ripple" id="stopBtn" title="Dừng tạo">■</button></div></div><div class="composer-bottom"><span>Gemini có thể mắc lỗi. Hãy kiểm tra câu trả lời.</span><span class="char-count" id="charCount">0 / 8.000</span></div></div>
+    </main>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <div class="modal-backdrop" id="keyModal"><div class="modal glass"><h2>🔐 Gemini API</h2><p>Key đang được nạp từ file môi trường khi chạy Vite. Không nhập key trực tiếp vào giao diện production.</p><p class="key-status" id="keyStatus"></p><div class="modal-actions"><button class="primary" id="closeModal">Đóng</button></div></div></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

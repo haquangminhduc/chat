@@ -1,0 +1,1 @@
+export function typewriter(text, onUpdate, speed = 7) { let output = ''; let index = 0; return new Promise(resolve => { const tick = () => { if (index >= text.length) return resolve(output); output += text[index++]; onUpdate(output); setTimeout(tick, speed); }; tick(); }); }

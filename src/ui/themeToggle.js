@@ -1,0 +1,1 @@
+export function initThemeToggle({ settingsStore, button }) { button.onclick = () => settingsStore.set(state => ({ ...state, theme: state.theme === 'dark' ? 'light' : 'dark' })); settingsStore.subscribe(state => { document.documentElement.dataset.theme = state.theme; }); document.documentElement.dataset.theme = settingsStore.get().theme; }
