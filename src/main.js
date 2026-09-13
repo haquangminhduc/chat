@@ -39,17 +39,18 @@ async function send(text, image, clearImage) {
   if (image) userMessage.parts = [{ inline_data: { mime_type: image.mime, data: image.data } }];
   chatStore.set(state => ({ ...state, chats: state.chats.map(item => item.id === chat.id ? { ...item, title: hasMessages ? item.title : `${text.slice(0, 42)}${text.length > 42 ? '…' : ''}`, messages: [...item.messages, userMessage, { role: 'assistant', content: '', streaming: true, time: Date.now() }] } : item) }));
   byId('prompt').value = ''; clearImage(); inputBar.resize(); inputBar.setGenerating(true); controller = new AbortController();
+  let streamedText = '';
   try {
     const current = activeChat();
     const contents = current.messages.filter(message => message.content || message.parts).map(message => ({ role: message.role === 'assistant' ? 'model' : 'user', parts: message.parts || [{ text: message.content }] }));
-    await streamGenerate({ ...settingsStore.get(), contents, keyManager, signal: controller.signal, onText: textChunk => { updateActiveChat(chatItem => ({ ...chatItem, messages: chatItem.messages.map((message, index) => index === chatItem.messages.length - 1 ? { ...message, content: message.content + textChunk } : message) })); const updated = activeChat()?.messages.at(-1); if (updated) chatArea.updateStreaming(updated); } });
-  } catch (error) { if (error.name !== 'AbortError') { toast(error.message || 'Không thể kết nối Gemini', 'error'); } }
-  finally { updateActiveChat(chatItem => ({ ...chatItem, messages: chatItem.messages.map((message, index) => index === chatItem.messages.length - 1 ? { ...message, streaming: false } : message) })); controller = null; inputBar.setGenerating(false); chatArea.render(); }
+    await streamGenerate({ ...settingsStore.get(), contents, keyManager, signal: controller.signal, onText: textChunk => { streamedText += textChunk; chatArea.updateStreamingText(streamedText); } });
+  } catch (error) { if (error.name !== 'AbortError') { const message = error.message || 'Không thể kết nối Duck AI'; streamedText = `Duck AI: ${message}`; toast(message, 'error'); } }
+  finally { updateActiveChat(chatItem => ({ ...chatItem, messages: chatItem.messages.map((message, index) => index === chatItem.messages.length - 1 ? { ...message, content: streamedText || 'Duck AI chưa trả về nội dung.', streaming: false } : message) })); controller = null; inputBar.setGenerating(false); chatArea.render(); }
 }
 
 function stop() { controller?.abort(); toast('Đã dừng tạo câu trả lời'); }
 function regenerate(index) { const chat = activeChat(); const previous = chat?.messages[index - 1]; if (!previous) return; updateActiveChat(item => ({ ...item, messages: item.messages.slice(0, index - 1) })); byId('prompt').value = previous.content; inputBar.resize(); send(previous.content, null, () => {}); }
-function exportChat() { const chat = activeChat(); if (!chat) return toast('Chưa có cuộc trò chuyện', 'error'); const markdown = chat.messages.map(message => `## ${message.role === 'user' ? 'Bạn' : 'Gemini'}\n\n${message.content}`).join('\n\n'); downloadText(markdown, `${chat.title.replace(/[^\w-]+/g, '_') || 'gemini-chat'}.md`, 'text/markdown'); toast('Đã xuất cuộc trò chuyện'); }
+function exportChat() { const chat = activeChat(); if (!chat) return toast('Chưa có cuộc trò chuyện', 'error'); const markdown = chat.messages.map(message => `## ${message.role === 'user' ? 'Bạn' : 'Duck AI'}\n\n${message.content}`).join('\n\n'); downloadText(markdown, `${chat.title.replace(/[^\w-]+/g, '_') || 'duck-ai-chat'}.md`, 'text/markdown'); toast('Đã xuất cuộc trò chuyện'); }
 function openKeyModal() { byId('keyModal').classList.add('open'); }
 
 const inputBar = initInputBar({ prompt: byId('prompt'), sendButton: byId('sendBtn'), stopButton: byId('stopBtn'), uploadButton: byId('uploadBtn'), imageInput: byId('imageInput'), preview: byId('uploadPreview'), previewImage: byId('previewImage'), previewName: byId('previewName'), removeImage: byId('removeImage'), micButton: byId('micBtn'), composer: byId('composer'), onSend: send, onStop: stop });
@@ -58,10 +59,11 @@ initThemeToggle({ settingsStore, button: byId('themeToggle') });
 initSettingsModal({ modal: byId('keyModal'), closeButton: byId('closeModal'), status: byId('keyStatus'), keyManager });
 byId('settingsToggle').onclick = () => byId('settings').classList.toggle('open');
 byId('exportBtn').onclick = exportChat;
-byId('modelSelect').value = settingsStore.get().model;
-byId('modelSelect').onchange = event => settingsStore.set(state => ({ ...state, model: event.target.value }));
-byId('temperature').value = settingsStore.get().temperature; byId('tempValue').value = settingsStore.get().temperature;
-byId('temperature').oninput = event => { byId('tempValue').value = event.target.value; settingsStore.set(state => ({ ...state, temperature: event.target.value })); };
+const temperature = byId('temperature');
+const tempValue = byId('tempValue');
+temperature.value = settingsStore.get().temperature;
+tempValue.value = settingsStore.get().temperature;
+temperature.oninput = event => { tempValue.value = event.target.value; settingsStore.set(state => ({ ...state, temperature: event.target.value })); };
 byId('systemInstruction').value = settingsStore.get().system;
 byId('systemInstruction').onchange = event => settingsStore.set(state => ({ ...state, system: event.target.value }));
 byId('helpBtn').onclick = () => toast('Ctrl+K tìm kiếm · Ctrl+B sidebar · Enter gửi · Shift+Enter xuống dòng');
