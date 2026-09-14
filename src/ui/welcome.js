@@ -1,3 +1,33 @@
 import { initRipple } from '../effects/ripple.js';
-const prompts = [['⌘','Viết code','Tạo và debug giải pháp','Viết một đoạn code JavaScript đẹp và giải thích từng phần'],['文','Dịch thuật','Phá bỏ rào cản ngôn ngữ','Dịch đoạn văn sau sang tiếng Anh tự nhiên, giữ nguyên sắc thái:'],['✧','Sáng tạo','Khơi nguồn cảm hứng mới','Viết một ý tưởng truyện ngắn thật bất ngờ về'],['◒','Phân tích','Nhìn vấn đề sâu sắc hơn','Phân tích ưu nhược điểm của việc làm việc từ xa và đưa ra kết luận cân bằng']];
-export function renderWelcome(container, onPrompt) { container.innerHTML = `<div class="welcome"><div class="hero-mark">✦</div><h1><span class="gradient-text">Xin chào, mình là Duck AI</span></h1><p>Một không gian trò chuyện thông minh, nhanh và đầy cảm hứng. Bạn muốn khám phá điều gì hôm nay?</p><div class="prompt-grid">${prompts.map(([icon,title,desc,prompt]) => `<button class="prompt-card ripple" data-prompt="${prompt}"><div class="prompt-icon">${icon}</div><strong>${title}</strong><span>${desc}</span></button>`).join('')}</div></div>`; container.querySelectorAll('.prompt-card').forEach(button => { button.onclick = () => onPrompt(button.dataset.prompt); }); initRipple(container); }
+
+const funPrompts = [
+  ['☕', 'Hóng drama', 'Cập nhật tin tức văn phòng', 'Hôm nay công ty có drama gì mới không hai đứa?'],
+  ['💰', 'Xin tăng lương', 'Thử tài thuyết phục của Sếp', 'Tháng này team mình làm việc thế nào, có xứng đáng được tăng lương không?'],
+  ['🍕', 'Kèo ăn trưa', 'Gợi ý món ngon hôm nay', 'Trưa nay Sếp tính bao cả phòng đi ăn, ai có đề xuất gì ngon không?'],
+  ['🚀', 'Gánh dự án', 'Tìm nhân tố xuất sắc', 'Dự án mới khách hàng hối gấp quá, ai tự tin đứng ra gánh kèo này?']
+];
+
+export function renderWelcome(container, onPrompt) {
+  container.innerHTML = `
+    <div class="welcome">
+      <div class="hero-mark">🗣️</div>
+      <h1><span class="gradient-text">Chào mừng Sếp đến với Phòng Tám Chuyện!</span></h1>
+      <p>Không gian văn phòng AI ảo hài hước & đầy bất ngờ. Gửi một chủ đề để các nhân viên cùng vào đối đáp nhé!</p>
+      <div class="prompt-grid">
+        ${funPrompts.map(([icon, title, desc, prompt]) => `
+          <button class="prompt-card ripple" data-prompt="${prompt}">
+            <div class="prompt-icon">${icon}</div>
+            <strong>${title}</strong>
+            <span>${desc}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  container.querySelectorAll('.prompt-card').forEach(button => {
+    button.onclick = () => onPrompt(button.dataset.prompt);
+  });
+
+  initRipple(container);
+}

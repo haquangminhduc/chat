@@ -7,11 +7,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Duck AI">
+  <meta name="apple-mobile-web-app-title" content="Phòng Tám Chuyện">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./duck-ai-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./duck-ai-icon.svg">
-  <title>Duck AI - AI Studio</title>
+  <title>Phòng Tám Chuyện - AI Office</title>
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
@@ -20,22 +20,50 @@
   <div class="aurora"></div><canvas id="particles"></canvas>
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-mark">✦</div><span class="brand-copy gradient-text">Duck AI</span></div>
-      <button class="new-chat ripple" id="newChat"><b>＋</b><span class="new-label">New chat</span></button>
+      <div class="brand"><div class="brand-mark">🗣️</div><span class="brand-copy gradient-text">Tám Chuyện AI</span></div>
+      <button class="new-chat ripple" id="newChat"><b>＋</b><span class="new-label">Phòng mới</span></button>
       <label class="search-box">⌕<input id="searchConversations" placeholder="Tìm cuộc trò chuyện..." autocomplete="off"></label>
       <div class="section-label">Gần đây</div><div class="conversation-list" id="conversationList"></div>
       <div class="sidebar-footer"><button class="icon-btn ripple" id="toggleSidebar" title="Thu gọn sidebar">☰<span>Thu gọn</span></button><button class="icon-btn ripple" id="exportBtn" title="Xuất cuộc trò chuyện">⇩<span>Xuất</span></button><button class="icon-btn ripple" id="clearHistory" title="Xóa toàn bộ lịch sử">⌫<span>Xóa</span></button><button class="icon-btn ripple" id="themeToggle" title="Đổi giao diện">☼<span>Theme</span></button></div>
-      </aside><button class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Đóng menu"></button>
+    </aside><button class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Đóng menu"></button>
     <main class="main">
-      <header class="topbar"><button class="icon-btn ripple mobile-menu" id="mobileMenu" title="Mở menu">☰</button><div class="model-label">✦ Duck AI</div><div class="top-actions"><label class="mood-picker" title="Chọn chế độ trò chuyện">🗣️ <select id="roomModeSelect" aria-label="Chế độ trò chuyện"><option value="standard">Duck AI (Đơn)</option><option value="tam_chuyen">Phòng tám chuyện</option></select></label><label class="mood-picker" title="Chọn tâm trạng Duck AI">🦆 <select id="moodSelect" aria-label="Tâm trạng Duck AI"><option value="friendly">Vui vẻ</option><option value="professor">Giáo sư</option><option value="sassy">Cà khịa</option><option value="serious">Nghiêm túc</option></select></label><button class="icon-btn ripple" id="settingsToggle" title="Cài đặt model">⚙</button><button class="icon-btn ripple help" id="helpBtn" title="Phím tắt">?</button></div></header>
-      <div class="persona-bar" id="personaBar" style="display: none;"></div>
+      <header class="topbar">
+        <button class="icon-btn ripple mobile-menu" id="mobileMenu" title="Mở menu">☰</button>
+        <div class="model-label">🗣️ Phòng Tám Chuyện AI</div>
+        <div class="top-actions">
+          <button class="icon-btn ripple" id="autoSpeakToggle" title="Bật/Tắt tự động đọc giọng nói (Auto-Speak)">🔈</button>
+          <button class="icon-btn ripple" id="settingsToggle" title="Cài đặt model">⚙</button>
+          <button class="icon-btn ripple help" id="helpBtn" title="Phím tắt">?</button>
+        </div>
+      </header>
+      <div class="kpi-bar" id="kpiBar"></div>
+      <div class="persona-bar" id="personaBar"></div>
       <section id="chat" aria-live="polite"></section><button class="scroll-bottom icon-btn" id="scrollBottom" title="Cuộn xuống cuối">⌄</button>
-      <div class="composer-wrap"><div class="settings glass" id="settings"><label class="settings-row">Temperature <input type="range" id="temperature" min="0" max="2" step=".1" value=".7"><output id="tempValue">0.7</output></label><label class="settings-row">System <input type="text" id="systemInstruction" placeholder="Bạn là trợ lý hữu ích..."></label></div><div class="upload-preview glass" id="uploadPreview"><img id="previewImage"><span id="previewName"></span><button class="icon-btn" id="removeImage">×</button></div><div class="composer" id="composer"><button class="icon-btn ripple" id="uploadBtn" title="Đính kèm ảnh">⊕</button><input type="file" id="imageInput" accept="image/*" hidden><textarea id="prompt" rows="1" placeholder="Hỏi Duck AI bất cứ điều gì..." aria-label="Tin nhắn"></textarea><div class="composer-actions"><button class="icon-btn ripple" id="micBtn" title="Nhập bằng giọng nói">♩</button><button class="send-btn ripple" id="sendBtn" title="Gửi">➤</button></div></div><div class="composer-bottom"><span>Duck AI có thể mắc lỗi. Hãy kiểm tra câu trả lời.</span><span class="char-count" id="charCount">0 / 8.000</span></div></div>
+      <div class="composer-wrap">
+        <div class="settings glass" id="settings">
+          <label class="settings-row">Temperature <input type="range" id="temperature" min="0" max="2" step=".1" value=".7"><output id="tempValue">0.7</output></label>
+          <label class="settings-row">System <input type="text" id="systemInstruction" placeholder="Chỉ dẫn chung cho văn phòng..."></label>
+        </div>
+        <div class="upload-preview glass" id="uploadPreview"><img id="previewImage"><span id="previewName"></span><button class="icon-btn" id="removeImage">×</button></div>
+        <div class="composer" id="composer">
+          <button class="icon-btn ripple" id="uploadBtn" title="Đính kèm ảnh">⊕</button>
+          <input type="file" id="imageInput" accept="image/*" hidden>
+          <textarea id="prompt" rows="1" placeholder="Nhập tin nhắn để cả phòng cùng đối đáp..." aria-label="Tin nhắn"></textarea>
+          <div class="composer-actions">
+            <button class="icon-btn ripple" id="micBtn" title="Nhập bằng giọng nói">♩</button>
+            <button class="send-btn ripple" id="sendBtn" title="Gửi">➤</button>
+          </div>
+        </div>
+        <div class="composer-bottom"><span>Phòng Tám Chuyện AI · Nhập tin nhắn để các nhân viên cùng đối đáp.</span><span class="char-count" id="charCount">0 / 8.000</span></div>
+      </div>
     </main>
   </div>
   <div class="toast-stack" id="toastStack"></div>
-  <div class="modal-backdrop" id="keyModal"><div class="modal glass"><h2>🔐 Duck AI API</h2><p>Key đang được nạp từ file môi trường khi chạy Vite. Không nhập key trực tiếp vào giao diện production.</p><p class="key-status" id="keyStatus"></p><div class="modal-actions"><button class="primary" id="closeModal">Đóng</button></div></div></div>
+  <div class="modal-backdrop" id="keyModal"><div class="modal glass"><h2>🔐 API Cấu hình</h2><p>Key đang được nạp từ file môi trường khi chạy Vite.</p><p class="key-status" id="keyStatus"></p><div class="modal-actions"><button class="primary" id="closeModal">Đóng</button></div></div></div>
   <div class="modal-backdrop" id="personaModal"></div>
+  <div class="modal-backdrop" id="kpiModal"></div>
+  <div class="modal-backdrop" id="wheelModal"></div>
+  <div class="modal-backdrop" id="matchModal"></div>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

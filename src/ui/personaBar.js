@@ -1,26 +1,17 @@
 import { escapeHtml } from '../utils/dom.js';
 import { toast } from './toast.js';
 import { personaStore, togglePersona, getPersonas } from '../state/personaStore.js';
-import { activeChat, chatStore } from '../state/chatStore.js';
 
 export function initPersonaBar({ container, onOpenModal }) {
   if (!container) return;
 
   function render() {
-    const chat = activeChat();
-    const isTamChuyen = chat?.mode === 'tam_chuyen';
-
-    if (!isTamChuyen) {
-      container.style.display = 'none';
-      return;
-    }
-
     container.style.display = 'flex';
     const personas = getPersonas();
 
     container.innerHTML = `
       <div class="persona-bar-header">
-        <span class="persona-bar-title">👥 Thành viên phòng:</span>
+        <span class="persona-bar-title">👥 Thành viên:</span>
       </div>
       <div class="persona-badges-list">
         ${personas.map(persona => {
@@ -39,7 +30,6 @@ export function initPersonaBar({ container, onOpenModal }) {
       </div>
     `;
 
-    // Event listeners
     container.querySelectorAll('.persona-badge').forEach(badge => {
       badge.onclick = () => {
         const id = badge.dataset.id;
@@ -58,8 +48,6 @@ export function initPersonaBar({ container, onOpenModal }) {
   }
 
   personaStore.subscribe(render);
-  chatStore.subscribe(render);
-
   render();
 
   return { render };

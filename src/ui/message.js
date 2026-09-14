@@ -2,19 +2,26 @@ import { renderMarkdown, highlightCode } from '../utils/markdown.js';
 import { escapeHtml } from '../utils/dom.js';
 import { timeLabel } from '../utils/format.js';
 
+function formatInlineMentions(html) {
+  if (!html) return '';
+  return html.replace(/(@[a-zA-Z0-9_\u00C0-\u1EF9]+(?:\s\([^\)]+\))?)/g, '<span class="inline-mention">$1</span>');
+}
+
 export function renderMessage(message, index, actions) {
   const wrapper = document.createElement('article');
   const speakerClass = message.speakerClass || (message.speakerKey ? `speaker-${message.speakerKey}` : '');
   wrapper.className = `message ${message.role} ${speakerClass}`.trim();
   
-  const body = message.role === 'assistant' 
+  const rawBody = message.role === 'assistant' 
     ? renderMarkdown(message.content || '') 
     : escapeHtml(message.content || '').replace(/\n/g, '<br>');
+
+  const body = formatInlineMentions(rawBody);
     
   const avatarChar = message.avatar || (message.role === 'user' ? '♙' : '🦆');
   const avatar = message.role === 'assistant' 
-    ? `<div class="avatar assistant-avatar ${speakerClass} mood-${message.mood || 'friendly'}" aria-label="${escapeHtml(message.speakerName || 'Duck AI')}">${avatarChar}</div>` 
-    : `<div class="avatar user-avatar" aria-label="${escapeHtml(message.speakerName || 'Bạn')}">${avatarChar}</div>`;
+    ? `<div class="avatar assistant-avatar ${speakerClass}" aria-label="${escapeHtml(message.speakerName || 'AI')}">${avatarChar}</div>` 
+    : `<div class="avatar user-avatar" aria-label="${escapeHtml(message.speakerName || 'Sếp')}">${avatarChar}</div>`;
     
   const speakerBadge = message.speakerName ? `<div class="speaker-name-badge">${escapeHtml(message.speakerName)}</div>` : '';
   const image = message.image ? `<div class="message-image-wrap"><img class="message-image" src="data:${message.image.mime};base64,${message.image.data}" alt="${escapeHtml(message.image.name || 'Ảnh đính kèm')}"><button class="copy-image" title="Copy ảnh">⧉</button></div>` : '';
@@ -27,7 +34,7 @@ export function renderMessage(message, index, actions) {
     wrapper.querySelector('.regen').onclick = () => actions.regenerate(index);
     wrapper.querySelector('.like').onclick = event => { event.currentTarget.textContent = '♥'; actions.toast('Đã ghi nhận phản hồi'); };
     wrapper.querySelector('.dislike').onclick = event => { event.currentTarget.textContent = '♦'; actions.toast('Đã ghi nhận phản hồi'); };
-    wrapper.querySelector('.speak').onclick = () => actions.speak(message.content);
+    wrapper.querySelector('.speak').onclick = () => actions.speak(message.content, message.speakerKey);
     wrapper.querySelectorAll('pre').forEach(pre => {
       const code = pre.querySelector('code');
       if (!code) return;
