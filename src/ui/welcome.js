@@ -1,7 +1,7 @@
 import { initRipple } from '../effects/ripple.js';
 
 const funPrompts = [
-  ['☕', 'Hóng drama', 'Cập nhật tin tức văn phòng', 'Hôm nay công ty có drama gì mới không hai đứa?'],
+  ['☕', 'Hóng drama', 'Cập nhật tin tức văn phòng', 'Hôm nay công ty có drama gì mới không cả phòng?'],
   ['💰', 'Xin tăng lương', 'Thử tài thuyết phục của Sếp', 'Tháng này team mình làm việc thế nào, có xứng đáng được tăng lương không?'],
   ['🍕', 'Kèo ăn trưa', 'Gợi ý món ngon hôm nay', 'Trưa nay Sếp tính bao cả phòng đi ăn, ai có đề xuất gì ngon không?'],
   ['🚀', 'Gánh dự án', 'Tìm nhân tố xuất sắc', 'Dự án mới khách hàng hối gấp quá, ai tự tin đứng ra gánh kèo này?']

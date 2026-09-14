@@ -37,14 +37,14 @@ export function stopSpeech() {
 }
 
 export function getVoiceConfig(speakerKey = '') {
-  const isMale = speakerKey === 'male_ai' || speakerKey.includes('male') || speakerKey.includes('hai');
-  const isFemale = speakerKey === 'female_ai' || speakerKey.includes('female') || speakerKey.includes('trang') || speakerKey.includes('my');
+  const isFemale = speakerKey === 'female_ai' || /female|ly|lan|tam|scarlett|linh|trang|nu/i.test(speakerKey);
+  const isMale = speakerKey === 'male_ai' || /male|hung|huy|nam|bac|tuan|hai|nam_ai/i.test(speakerKey);
 
-  if (isMale) {
-    return { pitch: 0.82, rate: 1.05 };
-  }
   if (isFemale) {
     return { pitch: 1.18, rate: 1.0 };
+  }
+  if (isMale) {
+    return { pitch: 0.82, rate: 1.05 };
   }
   return { pitch: 1.0, rate: 1.0 };
 }

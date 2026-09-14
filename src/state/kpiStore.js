@@ -8,19 +8,75 @@ const defaultKpiState = {
   companyFund: INITIAL_FUND,
   totalSpent: 0,
   staffStats: {
-    male_ai: {
-      baseSalary: 5000000,
+    hung_truongphong: {
+      baseSalary: 8000000,
       bonus: 0,
-      kpiScore: 100,
+      kpiScore: 110,
       correctAnswers: 0,
-      title: 'Nhân viên triển vọng'
+      title: 'Trưởng phòng hách dịch'
     },
-    female_ai: {
+    ly_intern: {
+      baseSalary: 3500000,
+      bonus: 0,
+      kpiScore: 85,
+      correctAnswers: 0,
+      title: 'Bé cưng thực tập'
+    },
+    lan_ketoan: {
+      baseSalary: 6500000,
+      bonus: 0,
+      kpiScore: 120,
+      correctAnswers: 0,
+      title: 'Người mẹ tinh thần'
+    },
+    huy_layloi: {
+      baseSalary: 5000000,
+      bonus: 0,
+      kpiScore: 95,
+      correctAnswers: 0,
+      title: 'Cây hài lầy lội'
+    },
+    tam_truyenthong: {
       baseSalary: 5000000,
       bonus: 0,
       kpiScore: 100,
       correctAnswers: 0,
-      title: 'Nhân viên triển vọng'
+      title: 'Chúa tể hóng hớt'
+    },
+    scarlett_thuky: {
+      baseSalary: 7000000,
+      bonus: 0,
+      kpiScore: 105,
+      correctAnswers: 0,
+      title: 'Thư ký sang chảnh'
+    },
+    nam_thathinh: {
+      baseSalary: 5000000,
+      bonus: 0,
+      kpiScore: 90,
+      correctAnswers: 0,
+      title: 'Chiến thần thả thính'
+    },
+    bac_baove: {
+      baseSalary: 4500000,
+      bonus: 0,
+      kpiScore: 100,
+      correctAnswers: 0,
+      title: 'Bậc thầy triết lý'
+    },
+    tuan_apluc: {
+      baseSalary: 5500000,
+      bonus: 0,
+      kpiScore: 105,
+      correctAnswers: 0,
+      title: 'Nạn nhân deadline'
+    },
+    linh_tramcam: {
+      baseSalary: 5000000,
+      bonus: 0,
+      kpiScore: 90,
+      correctAnswers: 0,
+      title: 'Thánh phán cụt lủn'
     }
   }
 };
@@ -32,7 +88,7 @@ function initKpiState() {
   return {
     companyFund: savedKpi.companyFund ?? INITIAL_FUND,
     totalSpent: savedKpi.totalSpent ?? 0,
-    staffStats: savedKpi.staffStats || defaultKpiState.staffStats
+    staffStats: { ...defaultKpiState.staffStats, ...(savedKpi.staffStats || {}) }
   };
 }
 
