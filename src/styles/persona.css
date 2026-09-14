@@ -1,0 +1,325 @@
+/* Persona Bar Styles */
+.persona-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 20px;
+  background: rgba(15, 12, 34, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.persona-bar-header {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
+
+.persona-badges-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.persona-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.persona-badge:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.persona-badge.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25));
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.2);
+  color: #fff;
+}
+
+.persona-badge.active .persona-status-indicator {
+  color: #10b981;
+  text-shadow: 0 0 6px #10b981;
+}
+
+.persona-badge.muted {
+  opacity: 0.5;
+  filter: grayscale(0.8);
+  border-style: dashed;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.persona-badge.muted .persona-status-indicator {
+  color: #94a3b8;
+}
+
+.persona-status-indicator {
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+.persona-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--text-muted, #ccc);
+  transition: all 0.2s ease;
+}
+
+.persona-add-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+}
+
+/* Speaker classes for custom personas */
+.speaker-custom-ai .assistant-avatar {
+  background: linear-gradient(135deg, #a78bfa, #ec4899);
+}
+
+/* Modal Content Styles */
+.persona-modal-content {
+  width: 95%;
+  max-width: 680px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 16px;
+  border-radius: 20px;
+}
+
+.persona-modal-content .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.persona-modal-content .modal-header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.persona-modal-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-right: 4px;
+}
+
+.persona-form-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.persona-form-card h3 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 12px;
+  color: var(--text-muted, #aaa);
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: rgba(168, 85, 247, 0.8);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+}
+
+.emoji-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.emoji-presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.emoji-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.emoji-btn:hover {
+  transform: scale(1.2);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.form-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.template-label {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+}
+
+.template-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.template-chip {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.template-chip:hover {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.persona-list-section h3 {
+  font-size: 1rem;
+  margin: 0 0 10px 0;
+}
+
+.persona-list-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.persona-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.persona-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.persona-item-avatar {
+  font-size: 1.5rem;
+}
+
+.persona-item-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.persona-item-meta strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.persona-item-desc {
+  font-size: 11px;
+  color: var(--text-muted, #aaa);
+  margin: 2px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+.persona-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+@media (max-width: 767px) {
+  .persona-bar {
+    padding: 6px 12px;
+    gap: 6px;
+  }
+  .persona-badge {
+    padding: 4px 9px;
+    font-size: 12px;
+  }
+  .persona-item-desc {
+    max-width: 160px;
+  }
+}

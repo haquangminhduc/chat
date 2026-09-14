@@ -14,6 +14,9 @@ import { initThemeToggle } from './ui/themeToggle.js';
 import { initSidebar } from './ui/sidebar.js';
 import { initInputBar } from './ui/inputBar.js';
 import { initSettingsModal } from './ui/settingsModal.js';
+import { initPersonaModal } from './ui/personaModal.js';
+import { initPersonaBar } from './ui/personaBar.js';
+import { getActivePersonas } from './state/personaStore.js';
 import { createChatArea } from './ui/chatArea.js';
 
 const keyManager = new KeyManager();
@@ -117,11 +120,14 @@ async function sendTamChuyen(text, image, chat) {
   }));
   chatArea.render();
 
-  const speakers = ['male_ai', 'female_ai'];
+  const activePersonas = getActivePersonas();
+  if (activePersonas.length === 0) {
+    toast('Tất cả nhân vật đang tắt. Hãy bật ít nhất 1 nhân vật trong phòng!', 'error');
+    return;
+  }
 
-  for (const speakerKey of speakers) {
+  for (const persona of activePersonas) {
     if (controller?.signal.aborted) break;
-    const persona = config.personas[speakerKey];
 
     updateActiveChat(item => ({
       ...item,
@@ -129,8 +135,8 @@ async function sendTamChuyen(text, image, chat) {
         ...item.messages,
         {
           role: 'assistant',
-          speakerKey,
-          speakerClass: persona.speakerClass,
+          speakerKey: persona.id,
+          speakerClass: persona.speakerClass || 'custom-ai',
           speakerName: persona.name,
           avatar: persona.avatar,
           content: '',
@@ -148,7 +154,7 @@ async function sendTamChuyen(text, image, chat) {
         if (msg.role === 'user') {
           return { role: 'user', parts: [{ text: `[Sếp]: ${msg.content}` }] };
         }
-        if (msg.speakerKey === speakerKey) {
+        if (msg.speakerKey === persona.id) {
           return { role: 'model', parts: [{ text: msg.content }] };
         }
         return { role: 'user', parts: [{ text: `[${msg.speakerName || 'Đồng nghiệp'}]: ${msg.content}` }] };
@@ -252,6 +258,8 @@ initSidebar({
 
 initThemeToggle({ settingsStore, button: byId('themeToggle') });
 initSettingsModal({ modal: byId('keyModal'), closeButton: byId('closeModal'), status: byId('keyStatus'), keyManager, proxyUrl: config.proxyUrl });
+const personaModal = initPersonaModal({ modal: byId('personaModal') });
+initPersonaBar({ container: byId('personaBar'), onOpenModal: () => personaModal.open() });
 byId('settingsToggle').onclick = () => byId('settings').classList.toggle('open');
 byId('exportBtn').onclick = exportChat;
 const moodSelect = byId('moodSelect');
