@@ -280,3 +280,59 @@ export function resetFund(amount = INITIAL_FUND) {
     totalSpent: 0
   }));
 }
+
+export function applyTaiXiuSettlement(bets, result) {
+  // result: { dice: [d1, d2, d3], total, isTai, isTriple }
+  const winningChoice = result.isTai ? 'tai' : 'xiu';
+  const state = kpiStore.get();
+  let netFundChange = 0; // Positive = House (Sếp) wins, Negative = House pays out
+  const updatedStaff = { ...state.staffStats };
+  const winners = [];
+  const losers = [];
+
+  bets.forEach(bet => {
+    ensureStaffStat(bet.personaId);
+    const prev = updatedStaff[bet.personaId] || { baseSalary: 5000000, bonus: 0, kpiScore: 100, correctAnswers: 0 };
+    const won = bet.choice === winningChoice;
+    const amount = bet.amount;
+
+    if (won) {
+      const newBonus = prev.bonus + amount;
+      const newKpi = prev.kpiScore + Math.round(amount / 25000);
+      updatedStaff[bet.personaId] = {
+        ...prev,
+        bonus: newBonus,
+        kpiScore: newKpi,
+        title: calculateTitle(newKpi, newBonus)
+      };
+      netFundChange -= amount;
+      winners.push({ ...bet, winAmount: amount });
+    } else {
+      const newBonus = Math.max(-3000000, prev.bonus - amount);
+      const newKpi = Math.max(0, prev.kpiScore - Math.round(amount / 25000));
+      updatedStaff[bet.personaId] = {
+        ...prev,
+        bonus: newBonus,
+        kpiScore: newKpi,
+        title: calculateTitle(newKpi, newBonus)
+      };
+      netFundChange += amount;
+      losers.push({ ...bet, lossAmount: amount });
+    }
+  });
+
+  const newFund = Math.max(0, state.companyFund + netFundChange);
+  kpiStore.set(s => ({
+    ...s,
+    companyFund: newFund,
+    staffStats: updatedStaff
+  }));
+
+  return {
+    netFundChange,
+    winners,
+    losers,
+    result
+  };
+}
+

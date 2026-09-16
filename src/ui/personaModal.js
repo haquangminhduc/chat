@@ -1,6 +1,7 @@
 import { escapeHtml } from '../utils/dom.js';
 import { toast } from './toast.js';
-import { personaStore, getPersonas, addPersona, updatePersona, deletePersona } from '../state/personaStore.js';
+import { downloadText } from '../utils/format.js';
+import { personaStore, getPersonas, addPersona, updatePersona, deletePersona, restoreDefaultPersonas, importPersonas } from '../state/personaStore.js';
 
 const PRESET_EMOJIS = ['👦', '👩', '🧙‍♂️', '👵', '🧑‍💻', '🐱', '🐶', '🕶️', '🤡', '🤖', '🕵️', '👨‍🍳', '👑', '🦄', '👔', '🚀'];
 
@@ -79,9 +80,22 @@ export function initPersonaModal({ modal, closeButton }) {
 
           <!-- Danh sách nhân vật hiện có -->
           <div class="persona-list-section">
-            <h3>Danh sách nhân vật hiện có (${personas.length})</h3>
+            <div class="persona-list-header">
+              <h3>Danh sách nhân vật (${personas.length})</h3>
+              <div class="persona-header-actions">
+                <button type="button" class="btn-persona-action export ripple" id="exportPersonasBtn" title="Tải file sao lưu toàn bộ nhân viên về máy">📥 Sao lưu (.json)</button>
+                <button type="button" class="btn-persona-action import ripple" id="importPersonasBtn" title="Nạp danh sách nhân viên từ file .json">📤 Nạp file (.json)</button>
+                <input type="file" id="importPersonasFileInput" accept=".json" hidden>
+                <button type="button" class="btn-persona-action restore ripple" id="restoreDefaultPersonasBtn" title="Khôi phục lại 10 nhân viên mặc định ban đầu">🔄 Mặc định</button>
+              </div>
+            </div>
             <div class="persona-list-scroll">
-              ${personas.map(p => `
+              ${personas.length === 0 ? `
+                <div class="persona-empty-state">
+                  <p>Phòng hiện chưa có nhân viên nào.</p>
+                  <button type="button" class="btn primary small-btn ripple" id="restoreEmptyBtn">Khôi phục 10 nhân viên mặc định</button>
+                </div>
+              ` : personas.map(p => `
                 <div class="persona-item glass">
                   <div class="persona-item-info">
                     <span class="persona-item-avatar">${p.avatar}</span>
@@ -91,8 +105,8 @@ export function initPersonaModal({ modal, closeButton }) {
                     </div>
                   </div>
                   <div class="persona-item-actions">
-                    <button class="icon-btn edit-p-btn" data-id="${p.id}" title="Sửa">✎</button>
-                    ${!p.isDefault ? `<button class="icon-btn delete-p-btn" data-id="${p.id}" title="Xóa">🗑</button>` : ''}
+                    <button class="icon-btn edit-p-btn" data-id="${p.id}" title="Sửa nhân vật">✎</button>
+                    <button class="icon-btn delete-p-btn" data-id="${p.id}" title="Xóa nhân vật khỏi phòng">🗑</button>
                   </div>
                 </div>
               `).join('')}
@@ -111,6 +125,67 @@ export function initPersonaModal({ modal, closeButton }) {
     const doneBtn = modal.querySelector('#donePersonaModalBtn');
     if (closeBtn) closeBtn.onclick = closeModal;
     if (doneBtn) doneBtn.onclick = closeModal;
+
+    // Export Personas
+    const exportBtn = modal.querySelector('#exportPersonasBtn');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        const currentList = getPersonas();
+        const jsonStr = JSON.stringify(currentList, null, 2);
+        const fileName = `danh-sach-nhan-vien-${new Date().toISOString().slice(0, 10)}.json`;
+        downloadText(jsonStr, fileName, 'application/json');
+        toast(`Đã tải xuống file sao lưu (${currentList.length} nhân viên)!`);
+      };
+    }
+
+    // Import Personas
+    const importBtn = modal.querySelector('#importPersonasBtn');
+    const fileInput = modal.querySelector('#importPersonasFileInput');
+    if (importBtn && fileInput) {
+      importBtn.onclick = () => fileInput.click();
+      fileInput.onchange = e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            const count = importPersonas(data);
+            toast(`🎉 Đã nạp thành công ${count} nhân viên từ file!`);
+            if (editingId) editingId = null;
+            render();
+          } catch (err) {
+            toast(err.message || 'Lỗi khi đọc file JSON!', 'error');
+          } finally {
+            fileInput.value = '';
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
+
+    // Restore default personas
+    const restoreBtn = modal.querySelector('#restoreDefaultPersonasBtn');
+    if (restoreBtn) {
+      restoreBtn.onclick = () => {
+        if (confirm('Bạn có chắc muốn khôi phục lại toàn bộ 10 nhân viên mặc định ban đầu của phòng?')) {
+          restoreDefaultPersonas();
+          toast('Đã khôi phục danh sách 10 nhân viên mặc định!');
+          if (editingId) editingId = null;
+          render();
+        }
+      };
+    }
+
+    const restoreEmptyBtn = modal.querySelector('#restoreEmptyBtn');
+    if (restoreEmptyBtn) {
+      restoreEmptyBtn.onclick = () => {
+        restoreDefaultPersonas();
+        toast('Đã khôi phục danh sách 10 nhân viên mặc định!');
+        render();
+      };
+    }
+
 
     // Emoji clicks
     modal.querySelectorAll('.emoji-btn').forEach(btn => {
@@ -188,7 +263,7 @@ export function initPersonaModal({ modal, closeButton }) {
       btn.onclick = () => {
         const id = btn.dataset.id;
         const target = getPersonas().find(p => p.id === id);
-        if (target && confirm(`Bạn có chắc muốn xóa nhân vật ${target.name}?`)) {
+        if (target && confirm(`Bạn có chắc muốn xóa nhân vật "${target.name}" khỏi phòng?`)) {
           deletePersona(id);
           toast(`Đã xóa ${target.name}`);
           if (editingId === id) editingId = null;

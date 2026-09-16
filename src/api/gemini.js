@@ -7,24 +7,41 @@ export async function streamGenerate({ model, temperature, system, contents, key
   const body = { contents, generationConfig: { temperature: Number(temperature), maxOutputTokens: 8192 } };
   if (system?.trim()) body.system_instruction = { parts: [{ text: system.trim() }] };
   let lastError;
-  for (let attempt = 0; attempt < Math.max(keyManager.size, 2); attempt += 1) {
+  const maxAttempts = Math.max(keyManager.size * 2, 3);
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
       const url = `${config.apiBase}/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(keyManager.current())}`;
       const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
-      if (!response.ok) { const raw = await response.text(); const error = new Error(apiError(response.status, raw)); error.status = response.status; if (isRotatableStatus(response.status)) { keyManager.rotate(); lastError = error; continue; } throw error; }
+      if (!response.ok) {
+        const raw = await response.text();
+        const error = new Error(apiError(response.status, raw));
+        error.status = response.status;
+        if (isRotatableStatus(response.status)) {
+          keyManager.rotate();
+          lastError = error;
+          // Chờ 800ms - 1.5s trước khi thử lại key khác hoặc retry
+          await new Promise(resolve => setTimeout(resolve, Math.min(1000 + attempt * 500, 3000)));
+          continue;
+        }
+        throw error;
+      }
       if (!response.body) throw new Error('Trình duyệt không hỗ trợ streaming.');
       await readSse(response.body, signal, onText);
       keyManager.reset();
       return;
     } catch (error) {
       if (error.name === 'AbortError') throw error;
-      if (error.status) throw error;
       lastError = error;
-      if (attempt < 1) { await new Promise(resolve => setTimeout(resolve, 700)); continue; }
+      if (attempt < maxAttempts - 1) {
+        keyManager.rotate();
+        await new Promise(resolve => setTimeout(resolve, 800));
+        continue;
+      }
     }
   }
   throw lastError || new Error('Không thể kết nối Gemini.');
 }
+
 
 async function streamThroughProxy({ model, temperature, system, contents, signal, onText }) {
   const response = await fetch(import.meta.env.VITE_GEMINI_PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, temperature, system, contents }), signal });

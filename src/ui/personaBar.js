@@ -1,19 +1,35 @@
 import { escapeHtml } from '../utils/dom.js';
 import { toast } from './toast.js';
-import { personaStore, togglePersona, getPersonas } from '../state/personaStore.js';
+import { personaStore, togglePersona, getPersonas, getActivePersonas } from '../state/personaStore.js';
+import { readStorage, writeStorage } from '../utils/storage.js';
 
 export function initPersonaBar({ container, onOpenModal }) {
   if (!container) return;
 
+  let isCollapsed = readStorage('persona_bar_collapsed', false);
+
   function render() {
     container.style.display = 'flex';
     const personas = getPersonas();
+    const activePersonas = getActivePersonas();
+    const activeCount = activePersonas.length;
+    const totalCount = personas.length;
+
+    container.className = `persona-bar ${isCollapsed ? 'is-collapsed' : 'is-expanded'}`;
 
     container.innerHTML = `
       <div class="persona-bar-header">
-        <span class="persona-bar-title">👥 Thành viên:</span>
+        <button class="persona-collapse-toggle ripple" id="togglePersonaCollapseBtn" title="${isCollapsed ? 'Nhấn để mở rộng danh sách thành viên' : 'Nhấn để thu gọn danh sách thành viên'}">
+          <span class="persona-bar-title">👥 Thành viên (${activeCount}/${totalCount})</span>
+          <span class="persona-collapse-pill">${isCollapsed ? '▼ Mở rộng' : '▲ Thu gọn'}</span>
+        </button>
+        ${isCollapsed ? `
+          <button class="persona-add-btn compact ripple" id="openPersonaModalBtnCompact" title="Quản lý / Thêm nhân vật AI">
+            <span>＋ Quản lý AI</span>
+          </button>
+        ` : ''}
       </div>
-      <div class="persona-badges-list">
+      <div class="persona-badges-list ${isCollapsed ? 'hidden' : ''}">
         ${personas.map(persona => {
           const isEnabled = persona.enabled !== false;
           return `
@@ -30,6 +46,16 @@ export function initPersonaBar({ container, onOpenModal }) {
       </div>
     `;
 
+    // Toggle collapse event
+    const collapseToggleBtn = container.querySelector('#togglePersonaCollapseBtn');
+    if (collapseToggleBtn) {
+      collapseToggleBtn.onclick = () => {
+        isCollapsed = !isCollapsed;
+        writeStorage('persona_bar_collapsed', isCollapsed);
+        render();
+      };
+    }
+
     container.querySelectorAll('.persona-badge').forEach(badge => {
       badge.onclick = () => {
         const id = badge.dataset.id;
@@ -45,6 +71,11 @@ export function initPersonaBar({ container, onOpenModal }) {
     if (addBtn) {
       addBtn.onclick = onOpenModal;
     }
+
+    const compactAddBtn = container.querySelector('#openPersonaModalBtnCompact');
+    if (compactAddBtn) {
+      compactAddBtn.onclick = onOpenModal;
+    }
   }
 
   personaStore.subscribe(render);
@@ -52,3 +83,4 @@ export function initPersonaBar({ container, onOpenModal }) {
 
   return { render };
 }
+

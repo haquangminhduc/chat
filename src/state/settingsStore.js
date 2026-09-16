@@ -3,10 +3,14 @@ import { readStorage, writeStorage } from '../utils/storage.js';
 import { createStore } from './store.js';
 
 const saved = readStorage('settings', {});
-const model = config.defaultModel;
 export const settingsStore = createStore({
   theme: saved.theme || 'dark',
-  model,
+  provider: saved.provider || config.provider,
+  model: saved.model || config.defaultModel,
+  openaiModel: saved.openaiModel || config.openaiModel,
+  openaiBaseUrl: saved.openaiBaseUrl || config.openaiBaseUrl,
+  openaiApiKey: saved.openaiApiKey || config.openaiApiKey,
+  geminiApiKey: saved.geminiApiKey || (config.apiKeys[0] || ''),
   temperature: saved.temperature ?? config.defaultTemperature,
   system: saved.system || config.defaultSystem,
   mood: saved.mood || 'friendly',
@@ -26,3 +30,4 @@ export function togglePartyMode() {
   });
   return nextState;
 }
+

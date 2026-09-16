@@ -2,6 +2,7 @@ import './styles/main.css';
 import { config } from './config.js';
 import { KeyManager } from './api/keyManager.js';
 import { streamGenerate } from './api/gemini.js';
+import { streamGenerateOpenAI } from './api/openai.js';
 import { settingsStore } from './state/settingsStore.js';
 import { activeChat, chatStore, createChat, ensureChat, updateActiveChat } from './state/chatStore.js';
 import { byId } from './utils/dom.js';
@@ -20,7 +21,9 @@ import { initKpiModal } from './ui/kpiModal.js';
 import { initKpiBar } from './ui/kpiBar.js';
 import { initWheelModal } from './ui/wheelModal.js';
 import { initMatchModal } from './ui/matchModal.js';
+import { initTaiXiuModal } from './ui/taiXiuModal.js';
 import { getActivePersonas, getPersonas } from './state/personaStore.js';
+
 import { kpiStore, formatVND, resetFund, getCompanyFund, rewardAllStaff } from './state/kpiStore.js';
 import { isPartyMode, togglePartyMode } from './state/settingsStore.js';
 import { speakImmediately, queueSpeech, isAutoSpeak, toggleAutoSpeak, stopSpeech } from './utils/voice.js';
@@ -31,8 +34,56 @@ const keyManager = new KeyManager();
 let controller = null;
 const sidebar = byId('sidebar');
 
+async function executeStreamGenerate({ system, contents, rawTurns, signal, onText }) {
+  const currentSettings = settingsStore.get();
+  if (currentSettings.provider === 'openai') {
+    const messages = [];
+    if (system?.trim()) {
+      messages.push({ role: 'system', content: system.trim() });
+    }
+    if (rawTurns && rawTurns.length > 0) {
+      for (const turn of rawTurns) {
+        if (turn.role === 'model') {
+          messages.push({ role: 'assistant', content: turn.text });
+        } else {
+          messages.push({ role: 'user', content: turn.text });
+        }
+      }
+    } else if (contents && contents.length > 0) {
+      for (const c of contents) {
+        const text = c.parts?.map(p => p.text || '').join('\n') || '';
+        messages.push({ role: c.role === 'model' ? 'assistant' : 'user', content: text });
+      }
+    }
+    await streamGenerateOpenAI({
+      baseUrl: currentSettings.openaiBaseUrl,
+      apiKey: currentSettings.openaiApiKey,
+      model: currentSettings.openaiModel,
+      temperature: currentSettings.temperature,
+      messages,
+      signal,
+      onText
+    });
+  } else {
+    // Gemini
+    const geminiKey = currentSettings.geminiApiKey?.trim();
+    if (geminiKey) {
+      keyManager.keys = geminiKey.split(',').map(k => k.trim()).filter(Boolean);
+    }
+    await streamGenerate({
+      ...currentSettings,
+      system,
+      contents,
+      keyManager,
+      signal,
+      onText
+    });
+  }
+}
+
 function copyText(text) { navigator.clipboard?.writeText(text).then(() => toast('Đã copy vào clipboard')).catch(() => toast('Không thể copy', 'error')); }
 async function copyImage(image) { try { const blob = await fetch(`data:${image.mime};base64,${image.data}`).then(response => response.blob()); await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]); toast('Đã copy ảnh'); } catch { toast('Trình duyệt không cho phép copy ảnh', 'error'); } }
+
 function closeMobile() { if (innerWidth < 768) sidebar.classList.remove('open'); }
 
 function shuffleArray(arr) {
@@ -139,6 +190,11 @@ async function sendGroupChat(text, image, chat) {
     const persona = targetPersonas[pIdx];
     if (controller?.signal.aborted) break;
 
+    if (pIdx > 0) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (controller?.signal.aborted) break;
+    }
+
     updateActiveChat(item => ({
       ...item,
       messages: [
@@ -199,17 +255,17 @@ async function sendGroupChat(text, image, chat) {
 
       const roomRule = `\n\n[QUY TẮC BẮT BUỘC TRONG PHÒNG TÁM CHUYỆN]:\n1. Bạn LÀ "${persona.name}". Bạn CHỈ ĐƯỢC PHÉP TRẢ LỜI LỜI THOẠI CỦA CHÍNH BẠN.\n2. TUYỆT ĐỐI KHÔNG tự bịa, không giả lập và không viết lời thoại cho các nhân vật khác.\n3. Bạn CÓ THỂ tự nhiên nhắc tên hoặc tag @Tên đồng nghiệp khác trong phòng để cà khịa, đối đáp hoặc tranh luận nếu phù hợp.\n4. KHÔNG viết tiền tố tên "[${persona.name}]:" ở đầu câu, chỉ trả lời trực tiếp nội dung.\n5. Hỏi gì đáp nấy, súc tích và ngắn gọn (1 - 3 câu thoại), đúng trọng tâm câu hỏi của Sếp.${kpiHint}${bulkHint}${partyHint}${liveWebContext}`;
 
-      await streamGenerate({
-        ...settingsStore.get(),
+      await executeStreamGenerate({
         system: `${persona.instruction}${roomRule}`,
         contents,
-        keyManager,
+        rawTurns,
         signal: controller.signal,
         onText: textChunk => {
           streamedText += textChunk;
           chatArea.updateStreamingText(streamedText);
         }
       });
+
     } catch (error) {
       if (error.name !== 'AbortError') {
         const message = error.message || 'Lỗi kết nối';
@@ -358,7 +414,7 @@ initSidebar({
 });
 
 initThemeToggle({ settingsStore, button: byId('themeToggle') });
-initSettingsModal({ modal: byId('keyModal'), closeButton: byId('closeModal'), status: byId('keyStatus'), keyManager, proxyUrl: config.proxyUrl });
+const settingsModal = initSettingsModal({ modal: byId('settingsModal') });
 
 async function triggerStaffReaction(personaId, actionType, amount) {
   if (controller) return;
@@ -424,17 +480,17 @@ async function triggerStaffReaction(personaId, actionType, amount) {
       contents[contents.length - 1].parts[0].text += `\n\n(LƯỢT NÓI CỦA "${persona.name}": Chỉ xuất DUY NHẤT lời thoại của chính bạn "${persona.name}"):`;
     }
 
-    await streamGenerate({
-      ...settingsStore.get(),
+    await executeStreamGenerate({
       system: `${persona.instruction}${situationPrompt}`,
       contents,
-      keyManager,
+      rawTurns,
       signal: controller.signal,
       onText: textChunk => {
         streamedText += textChunk;
         chatArea.updateStreamingText(streamedText);
       }
     });
+
   } catch (error) {
     if (error.name !== 'AbortError') {
       streamedText = actionType === 'reward' ? 'Dạ em cảm ơn Sếp nhiều lắm ạ!' : 'Dạ em xin lỗi Sếp, em sẽ cố gắng hơn ạ!';
@@ -516,11 +572,10 @@ async function handleWheelResult(persona, slice) {
       contents[contents.length - 1].parts[0].text += `\n\n(LƯỢT NÓI CỦA "${persona.name}": Chỉ xuất DUY NHẤT lời thoại của chính bạn "${persona.name}"):`;
     }
 
-    await streamGenerate({
-      ...settingsStore.get(),
+    await executeStreamGenerate({
       system: `${persona.instruction}${situationPrompt}`,
       contents,
-      keyManager,
+      rawTurns,
       signal: controller.signal,
       onText: textChunk => {
         streamedText += textChunk;
@@ -631,11 +686,10 @@ async function handleMatchResult(persona1, persona2, matchData) {
           contents[contents.length - 1].parts[0].text += `\n\n(LƯỢT NÓI CỦA "${turn.p.name}": Chỉ xuất DUY NHẤT lời thoại của chính bạn "${turn.p.name}"):`;
         }
 
-        await streamGenerate({
-          ...settingsStore.get(),
+        await executeStreamGenerate({
           system: `${turn.p.instruction}${turn.prompt}`,
           contents,
-          keyManager,
+          rawTurns,
           signal: controller.signal,
           onText: textChunk => {
             streamedText += textChunk;
@@ -670,8 +724,160 @@ async function handleMatchResult(persona1, persona2, matchData) {
   }
 }
 
+async function handleTaiXiuResult(settlement, bets) {
+
+  if (controller) return;
+  const chat = ensureChat();
+  stopSpeech();
+
+  const { result, netFundChange, winners, losers } = settlement;
+  const winNames = winners.map(w => `${w.avatar} ${w.personaName} (+${formatVND(w.winAmount)})`).join(', ') || 'Không ai';
+  const loseNames = losers.map(l => `${l.avatar} ${l.personaName} (-${formatVND(l.lossAmount)})`).join(', ') || 'Không ai';
+
+  const actionText = `[🎲 SÒNG TÀI XỈU VĂN PHÒNG: SẾP MỞ BÁT! 🎲\n- Xí ngầu: ${result.dice.join(' - ')} = ${result.total} Điểm (${result.isTai ? '🔴 TÀI' : '🔵 XỈU'})\n- Nhà cái (Sếp): ${netFundChange >= 0 ? `Hốt bạc +${formatVND(netFundChange)}!` : `Chung tiền -${formatVND(Math.abs(netFundChange))}!`}\n- Thắng cược (${winners.length}): ${winNames}\n- Thua cược (${losers.length}): ${loseNames}]`;
+
+  const userMessage = { role: 'user', speakerName: 'Sếp (Nhà Cái)', avatar: '👑', content: actionText, time: Date.now() };
+
+  updateActiveChat(item => ({
+    ...item,
+    messages: [
+      ...item.messages,
+      userMessage
+    ]
+  }));
+  chatArea.render();
+  chatArea.scrollToBottom();
+
+  const reactingPersonas = [];
+  if (winners.length > 0) {
+    const topWinner = [...winners].sort((a, b) => b.winAmount - a.winAmount)[0];
+    const p = getPersonas().find(x => x.id === topWinner.personaId);
+    if (p) reactingPersonas.push({ persona: p, won: true, amount: topWinner.winAmount, choice: topWinner.choice });
+  }
+  if (losers.length > 0) {
+    const topLoser = [...losers].sort((a, b) => b.lossAmount - a.lossAmount)[0];
+    const p = getPersonas().find(x => x.id === topLoser.personaId);
+    if (p && !reactingPersonas.some(r => r.persona.id === p.id)) {
+      reactingPersonas.push({ persona: p, won: false, amount: topLoser.lossAmount, choice: topLoser.choice });
+    }
+  }
+
+  const allActives = getActivePersonas();
+  for (const act of allActives) {
+    if (reactingPersonas.length >= 3) break;
+    if (!reactingPersonas.some(r => r.persona.id === act.id)) {
+      const b = bets.find(x => x.personaId === act.id);
+      if (b) {
+        reactingPersonas.push({ persona: act, won: b.choice === (result.isTai ? 'tai' : 'xiu'), amount: b.amount, choice: b.choice });
+      }
+    }
+  }
+
+  if (!reactingPersonas.length) return;
+
+  controller = new AbortController();
+  inputBar.setGenerating(true);
+
+  try {
+    for (let i = 0; i < reactingPersonas.length; i++) {
+      const { persona, won, amount, choice } = reactingPersonas[i];
+      if (controller?.signal.aborted) break;
+
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        if (controller?.signal.aborted) break;
+      }
+
+      updateActiveChat(item => ({
+        ...item,
+        messages: [
+          ...item.messages,
+          {
+            role: 'assistant',
+            speakerKey: persona.id,
+            speakerClass: persona.speakerClass || 'custom-ai',
+            speakerName: persona.name,
+            avatar: persona.avatar,
+            content: '',
+            streaming: true,
+            time: Date.now()
+          }
+        ]
+      }));
+      chatArea.render();
+
+      let streamedText = '';
+      try {
+        const current = activeChat();
+        const rawTurns = current.messages.slice(0, -1).filter(msg => msg.content || msg.parts).map(msg => {
+          if (msg.role === 'user') return { role: 'user', text: `[${msg.speakerName || 'Sếp'}]: ${msg.content}` };
+          if (msg.speakerKey === persona.id) return { role: 'model', text: msg.content };
+          return { role: 'user', text: `[${msg.speakerName || 'Đồng nghiệp'}]: ${msg.content}` };
+        });
+
+        const contents = [];
+        for (const t of rawTurns) {
+          const last = contents[contents.length - 1];
+          if (last && last.role === t.role) {
+            last.parts[0].text += `\n\n${t.text}`;
+          } else {
+            contents.push({ role: t.role, parts: [{ text: t.text }] });
+          }
+        }
+
+        const situationPrompt = won
+          ? `\n[TÌNH HUỐNG]: Sếp (Nhà cái) vừa mở bát Tài Xỉu và bạn đã ĐOÁN ĐÚNG cửa ${choice.toUpperCase()} ăn đậm ${formatVND(amount)}! Hãy phản hồi 1-2 câu gáy cực khét, vui sướng, đòi Sếp chung tiền tươi hoặc rủ đồng nghiệp đi ăn mừng theo đúng tính cách của bạn. Tuyệt đối không thêm tiền tố tên.`
+          : `\n[TÌNH HUỐNG]: Sếp (Nhà cái) vừa mở bát Tài Xỉu và bạn đã ĐOÁN SAI cửa ${choice.toUpperCase()} thua mất ${formatVND(amount)}! Hãy phản hồi 1-2 câu cay cú, than thở, nghi ngờ Sếp gắn nam châm vào xúc xắc hoặc đòi gỡ ván sau theo đúng tính cách của bạn. Tuyệt đối không thêm tiền tố tên.`;
+
+        if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+          contents[contents.length - 1].parts[0].text += `\n\n(LƯỢT NÓI CỦA "${persona.name}": Chỉ xuất DUY NHẤT lời thoại của chính bạn "${persona.name}"):`;
+        }
+
+        await executeStreamGenerate({
+          system: `${persona.instruction}${situationPrompt}`,
+          contents,
+          rawTurns,
+          signal: controller.signal,
+          onText: textChunk => {
+            streamedText += textChunk;
+            chatArea.updateStreamingText(streamedText);
+          }
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          streamedText = won ? `Haha em ăn ${choice.toUpperCase()} rồi, Sếp chung tiền đê!` : `Trời ơi gãy cầu ${choice.toUpperCase()} rồi, tiếc quá!`;
+        }
+      } finally {
+        const cleaned = streamedText ? streamedText.replace(new RegExp(`^\\[?\\s*${persona.name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\s*\\]?\\s*:\\s*`, 'i'), '') : '...';
+        updateActiveChat(chatItem => ({
+          ...chatItem,
+          messages: chatItem.messages.map((msg, index) => index === chatItem.messages.length - 1 ? {
+            ...msg,
+            content: cleaned,
+            streaming: false
+          } : msg)
+        }));
+        chatArea.render();
+        chatArea.scrollToBottom();
+
+        if (isAutoSpeak() && cleaned) {
+          queueSpeech(cleaned, persona.id);
+        }
+      }
+    }
+  } finally {
+    controller = null;
+    inputBar.setGenerating(false);
+  }
+}
+
 const personaModal = initPersonaModal({ modal: byId('personaModal') });
 initPersonaBar({ container: byId('personaBar'), onOpenModal: () => personaModal.open() });
+
+const taiXiuModal = initTaiXiuModal({
+  modal: byId('taiXiuModal'),
+  onResult: handleTaiXiuResult
+});
 
 const wheelModal = initWheelModal({
   modal: byId('wheelModal'),
@@ -692,6 +898,7 @@ const kpiModal = initKpiModal({
 initKpiBar({ 
   container: byId('kpiBar'), 
   onOpenKpiModal: () => kpiModal.open(),
+  onOpenTaiXiuModal: () => taiXiuModal.open(),
   onOpenWheelModal: () => wheelModal.open(),
   onOpenMatchModal: () => matchModal.open(),
   onToggleParty: () => {
@@ -699,6 +906,7 @@ initKpiBar({
     toast(active ? '🍻 Đã BẬT Chế Độ Party (Happy Hour)!' : 'Đã TẮT Chế Độ Party');
   }
 });
+
 
 function syncPartyModeUI() {
   document.body.classList.toggle('party-mode-active', isPartyMode());
@@ -716,7 +924,8 @@ if (autoSpeakToggle) {
   };
 }
 
-byId('settingsToggle').onclick = () => byId('settings').classList.toggle('open');
+byId('settingsToggle').onclick = () => settingsModal.open();
+
 byId('exportBtn').onclick = exportChat;
 byId('scrollBottom').onclick = () => chatArea.scrollToBottom();
 

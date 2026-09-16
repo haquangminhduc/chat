@@ -15,7 +15,7 @@ const LUNCH_PROMPTS = [
   'Trưa nay Sếp bao cả phòng đi ăn liên hoan! Mỗi đứa đề xuất 1 quán ngon chuẩn vị xem nào?'
 ];
 
-export function initKpiBar({ container, onOpenKpiModal, onOpenWheelModal, onOpenMatchModal, onToggleParty }) {
+export function initKpiBar({ container, onOpenKpiModal, onOpenWheelModal, onOpenMatchModal, onOpenTaiXiuModal, onToggleParty }) {
   if (!container) return;
 
   function render() {
@@ -28,6 +28,9 @@ export function initKpiBar({ container, onOpenKpiModal, onOpenWheelModal, onOpen
         <span class="kpi-fund-text">Quỹ: <b>${formatVND(fund)}</b></span>
       </div>
       <div class="kpi-bar-actions">
+        <button class="kpi-bar-btn ripple taixiu-btn" id="kpiTaiXiuBtn" title="Sếp Mở Sòng Tài Xỉu Văn Phòng (Làm Nhà Cái)">
+          <span>🎲 Tài Xỉu</span>
+        </button>
         <button class="kpi-bar-btn ripple" id="kpiLeaderboardBtn" title="Xem Bảng Xếp Hạng Thi Đua">
           <span>🏆 Bảng Thi Đua</span>
         </button>
@@ -54,6 +57,11 @@ export function initKpiBar({ container, onOpenKpiModal, onOpenWheelModal, onOpen
     if (openBtn) openBtn.onclick = onOpenKpiModal;
     if (leaderboardBtn) leaderboardBtn.onclick = onOpenKpiModal;
 
+    const taiXiuBtn = container.querySelector('#kpiTaiXiuBtn');
+    if (taiXiuBtn && onOpenTaiXiuModal) {
+      taiXiuBtn.onclick = onOpenTaiXiuModal;
+    }
+
     const wheelBtn = container.querySelector('#kpiWheelBtn');
     if (wheelBtn && onOpenWheelModal) {
       wheelBtn.onclick = onOpenWheelModal;
@@ -63,6 +71,7 @@ export function initKpiBar({ container, onOpenKpiModal, onOpenWheelModal, onOpen
     if (matchBtn && onOpenMatchModal) {
       matchBtn.onclick = onOpenMatchModal;
     }
+
 
     const partyBtn = container.querySelector('#kpiPartyBtn');
     if (partyBtn && onToggleParty) {

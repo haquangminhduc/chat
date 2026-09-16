@@ -101,19 +101,12 @@ const savedVersion = readStorage('personas_version', null);
 const savedPersonas = readStorage('personas', null);
 
 function initPersonas() {
-  if (savedVersion !== PERSONAS_VERSION || !savedPersonas || !Array.isArray(savedPersonas) || savedPersonas.length === 0) {
+  if (savedVersion !== PERSONAS_VERSION || !savedPersonas || !Array.isArray(savedPersonas)) {
     writeStorage('personas_version', PERSONAS_VERSION);
     writeStorage('personas', defaultPersonas);
     return defaultPersonas;
   }
-  const existingIds = new Set(savedPersonas.map(p => p.id));
-  const merged = [...savedPersonas];
-  defaultPersonas.forEach(dp => {
-    if (!existingIds.has(dp.id)) {
-      merged.push(dp);
-    }
-  });
-  return merged;
+  return savedPersonas;
 }
 
 export const personaStore = createStore({
@@ -185,3 +178,39 @@ export function deletePersona(id) {
     personas: state.personas.filter(p => p.id !== id)
   }));
 }
+
+export function restoreDefaultPersonas() {
+  personaStore.set(state => ({
+    ...state,
+    personas: defaultPersonas.map(p => ({ ...p }))
+  }));
+}
+
+export function importPersonas(importedList) {
+  if (!Array.isArray(importedList) || importedList.length === 0) {
+    throw new Error('File sao lưu không hợp lệ hoặc danh sách rỗng.');
+  }
+
+  const validPersonas = importedList.map(item => ({
+    id: item.id || `custom_${uid()}`,
+    name: String(item.name || 'Nhân vật').trim(),
+    avatar: String(item.avatar || '🤖').trim(),
+    speakerClass: item.speakerClass || 'custom-ai',
+    instruction: String(item.instruction || '').trim(),
+    isDefault: !!item.isDefault,
+    enabled: item.enabled !== false
+  })).filter(p => p.name && p.instruction);
+
+  if (validPersonas.length === 0) {
+    throw new Error('Không tìm thấy thông tin nhân vật hợp lệ trong file JSON.');
+  }
+
+  personaStore.set(state => ({
+    ...state,
+    personas: validPersonas
+  }));
+
+  return validPersonas.length;
+}
+
+
