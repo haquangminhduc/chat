@@ -2,6 +2,8 @@ import { escapeHtml } from '../utils/dom.js';
 import { toast } from './toast.js';
 import { downloadText } from '../utils/format.js';
 import { personaStore, getPersonas, addPersona, updatePersona, deletePersona, restoreDefaultPersonas, importPersonas } from '../state/personaStore.js';
+import { generatePersonaWithAI } from '../api/personaGenerator.js';
+import { settingsStore } from '../state/settingsStore.js';
 
 const PRESET_EMOJIS = ['👦', '👩', '🧙‍♂️', '👵', '🧑‍💻', '🐱', '🐶', '🕶️', '🤡', '🤖', '🕵️', '👨‍🍳', '👑', '🦄', '👔', '🚀'];
 
@@ -26,10 +28,21 @@ const PRESET_TEMPLATES = [
   }
 ];
 
+const AI_QUICK_IDEAS = [
+  { label: '🔮 Mê Tarot', prompt: 'Đồng nghiệp mê bói bài Tarot, hễ có drama gì là lôi bài ra trải' },
+  { label: '☕ Dev thức đêm', prompt: 'Lead Dev thức đêm nghiện Redbull hay quạu nhưng code siêu đỉnh' },
+  { label: '💅 Lễ tân Gen Z', prompt: 'Nữ lễ tân Gen Z hay buôn dưa lê săn sale và nghiện trà sữa' },
+  { label: '💼 Sếp phó mê họp', prompt: 'Trưởng phòng thích họp hành lan man và mở miệng là nói triết lý làm giàu' },
+  { label: '🍕 Sale dẻo mồm', prompt: 'Nhân viên kinh doanh mồm mép dẻo quẹo hay chốt sale ảo đòi hoa hồng' },
+  { label: '🧘‍♀️ Hệ tâm linh', prompt: 'Chị đồng nghiệp hệ tâm linh ăn chay niệm Phật nhưng hóng biến siêu nhanh' }
+];
+
 export function initPersonaModal({ modal, closeButton }) {
   if (!modal) return;
 
   let editingId = null;
+  let isGeneratingAi = false;
+  let selectedAiProvider = settingsStore.get().provider || 'gemini';
 
   function render() {
     const personas = getPersonas();
@@ -42,8 +55,48 @@ export function initPersonaModal({ modal, closeButton }) {
         </div>
 
         <div class="persona-modal-body">
+          <!-- AI Sáng Tạo Nhân Vật Tự Động -->
+          <div class="ai-persona-generator-card glass">
+            <div class="ai-gen-header">
+              <div class="ai-gen-title">
+                <span class="ai-gen-badge-icon">🪄</span>
+                <div>
+                  <h4>AI Tự Tạo Nhân Vật & Tính Cách</h4>
+                  <p class="ai-gen-subtitle">Nhập mô tả ý tưởng, AI sẽ tự tạo tên, avatar và tính cách rồi tự điền vào form bên dưới</p>
+                </div>
+              </div>
+              <div class="ai-provider-toggle-group">
+                <span class="provider-label">Mô hình AI:</span>
+                <label class="provider-pill-option ${selectedAiProvider === 'gemini' ? 'active' : ''}">
+                  <input type="radio" name="aiPersonaProvider" value="gemini" ${selectedAiProvider === 'gemini' ? 'checked' : ''}>
+                  <span>⚡ Gemini</span>
+                </label>
+                <label class="provider-pill-option ${selectedAiProvider === 'openai' ? 'active' : ''}">
+                  <input type="radio" name="aiPersonaProvider" value="openai" ${selectedAiProvider === 'openai' ? 'checked' : ''}>
+                  <span>🤖 GPT</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="ai-gen-body">
+              <div class="ai-input-wrap">
+                <input type="text" id="aiPersonaPromptInput" placeholder="Nhập ý tưởng (VD: Bác bảo vệ vui tính hay bắt lỗi gửi xe, Bạn lễ tân Gen Z mê trà sữa...)" maxlength="150">
+                <button type="button" class="btn primary ai-generate-btn ripple" id="btnGenerateAiPersona" ${isGeneratingAi ? 'disabled' : ''}>
+                  ${isGeneratingAi ? '<span class="ai-spinner">⏳</span> Đang tạo...' : '✨ AI Tạo Ngay'}
+                </button>
+              </div>
+
+              <div class="ai-quick-ideas">
+                <span class="quick-idea-label">Ý tưởng nhanh:</span>
+                <div class="quick-idea-chips">
+                  ${AI_QUICK_IDEAS.map(idea => `<button type="button" class="idea-chip ripple" data-prompt="${escapeHtml(idea.prompt)}">${idea.label}</button>`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Form thêm/sửa -->
-          <div class="persona-form-card glass">
+          <div class="persona-form-card glass" id="personaFormCard">
             <h3>${editingId ? '✏️ Chỉnh sửa nhân vật' : '✨ Thêm nhân vật mới'}</h3>
             <div class="form-group">
               <label>Tên nhân vật:</label>
@@ -186,6 +239,92 @@ export function initPersonaModal({ modal, closeButton }) {
       };
     }
 
+
+    // AI Provider selection
+    modal.querySelectorAll('input[name="aiPersonaProvider"]').forEach(radio => {
+      radio.onchange = () => {
+        selectedAiProvider = radio.value;
+        modal.querySelectorAll('.provider-pill-option').forEach(pill => {
+          pill.classList.toggle('active', pill.querySelector('input').value === selectedAiProvider);
+        });
+      };
+    });
+
+    // AI Quick Idea chips
+    modal.querySelectorAll('.idea-chip').forEach(btn => {
+      btn.onclick = () => {
+        const promptInput = modal.querySelector('#aiPersonaPromptInput');
+        if (promptInput) {
+          promptInput.value = btn.dataset.prompt;
+          promptInput.focus();
+        }
+      };
+    });
+
+    // AI Generate character button
+    async function triggerAiGeneration() {
+      const promptInput = modal.querySelector('#aiPersonaPromptInput');
+      const desc = promptInput?.value?.trim();
+      if (!desc) {
+        toast('Vui lòng nhập mô tả hoặc chọn một ý tưởng gợi ý!', 'error');
+        promptInput?.focus();
+        return;
+      }
+
+      isGeneratingAi = true;
+      const genBtn = modal.querySelector('#btnGenerateAiPersona');
+      if (genBtn) {
+        genBtn.disabled = true;
+        genBtn.innerHTML = '<span class="ai-spinner">⏳</span> Đang suy nghĩ...';
+      }
+
+      try {
+        const result = await generatePersonaWithAI(desc, selectedAiProvider);
+        if (result && result.name) {
+          const nameInput = modal.querySelector('#personaNameInput');
+          const avatarInput = modal.querySelector('#personaAvatarInput');
+          const instructionInput = modal.querySelector('#personaInstructionInput');
+          const formCard = modal.querySelector('#personaFormCard');
+
+          if (nameInput) nameInput.value = result.name;
+          if (avatarInput) avatarInput.value = result.avatar || '🤖';
+          if (instructionInput) instructionInput.value = result.instruction || '';
+
+          if (formCard) {
+            formCard.classList.remove('glow-pulse');
+            void formCard.offsetWidth; // Force reflow
+            formCard.classList.add('glow-pulse');
+          }
+
+          const providerName = selectedAiProvider === 'openai' ? 'GPT' : 'Gemini';
+          toast(`✨ ${providerName} đã tạo xong nhân vật! Bạn hãy xem lại rồi bấm "Thêm vào phòng".`);
+          nameInput?.focus();
+        }
+      } catch (err) {
+        toast(err.message || 'Lỗi khi gọi AI tạo nhân vật!', 'error');
+      } finally {
+        isGeneratingAi = false;
+        if (genBtn) {
+          genBtn.disabled = false;
+          genBtn.innerHTML = '✨ AI Tạo Ngay';
+        }
+      }
+    }
+
+    const genBtn = modal.querySelector('#btnGenerateAiPersona');
+    if (genBtn) {
+      genBtn.onclick = triggerAiGeneration;
+    }
+
+    const aiPromptInput = modal.querySelector('#aiPersonaPromptInput');
+    if (aiPromptInput) {
+      aiPromptInput.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          triggerAiGeneration();
+        }
+      };
+    }
 
     // Emoji clicks
     modal.querySelectorAll('.emoji-btn').forEach(btn => {

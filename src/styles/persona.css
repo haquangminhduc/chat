@@ -197,6 +197,216 @@
   padding-right: 4px;
 }
 
+/* AI Persona Generator Card */
+.ai-persona-generator-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.08));
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.08);
+}
+
+.ai-gen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ai-gen-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-gen-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  font-size: 16px;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+}
+
+.ai-gen-title h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(135deg, #fff, var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ai-gen-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ai-provider-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel-2);
+  padding: 3px 6px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+}
+
+.provider-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  padding-left: 4px;
+}
+
+.provider-pill-option {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.provider-pill-option input {
+  display: none;
+}
+
+.provider-pill-option.active {
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+
+.provider-pill-option:not(.active):hover {
+  color: var(--text);
+  background: var(--panel-hover);
+}
+
+.ai-gen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ai-input-wrap input {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.ai-input-wrap input:focus {
+  border-color: var(--purple-light);
+  box-shadow: 0 0 0 2px var(--purple-glow);
+}
+
+.ai-generate-btn {
+  white-space: nowrap;
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  border: 0;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-generate-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px var(--purple-glow);
+}
+
+.ai-generate-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ai-quick-ideas {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-idea-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.quick-idea-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.idea-chip {
+  background: var(--panel-2);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 3px 9px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.idea-chip:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: var(--purple-light);
+  color: var(--purple-light);
+  transform: translateY(-1px);
+}
+
+.glow-pulse {
+  animation: glowPulseAnim 1.2s ease-out;
+}
+
+@keyframes glowPulseAnim {
+  0% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.6);
+    border-color: var(--purple-light);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(168, 85, 247, 0.4);
+    border-color: var(--purple);
+  }
+  100% {
+    box-shadow: none;
+    border-color: var(--line-subtle);
+  }
+}
+
 .persona-form-card {
   padding: 16px;
   border-radius: 14px;
